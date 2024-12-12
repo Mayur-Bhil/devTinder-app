@@ -1,0 +1,28 @@
+{
+  "name": "devtinder-app",
+  "version": "1.0.0",
+  "description": "nodejs,mongoDb",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mayur-Bhil/devTinder-app.git"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "mongoDb"
+  ],
+  "author": "mayur",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Mayur-Bhil/devTinder-app/issues"
+  },
+  "homepage": "https://github.com/Mayur-Bhil/devTinder-app#readme",
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongoose": "^8.8.4"
+  }
+}
