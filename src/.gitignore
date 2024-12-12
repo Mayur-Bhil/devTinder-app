@@ -1,3 +1,4 @@
+### Node ###
 # Logs
 logs
 *.log
@@ -39,11 +40,11 @@ bower_components
 build/Release
 
 # Dependency directories
-/node_modules
-/jspm_packages
+./node_modules
+jspm_packages/
 
 # Snowpack dependency directory (https://snowpack.dev/)
-web_modules
+web_modules/
 
 # TypeScript cache
 *.tsbuildinfo
@@ -53,6 +54,9 @@ web_modules
 
 # Optional eslint cache
 .eslintcache
+
+# Optional stylelint cache
+.stylelintcache
 
 # Microbundle cache
 .rpt2_cache/
@@ -69,10 +73,12 @@ web_modules
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# dotenv environment variable files
 .env
-.env.test
-.env.production
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -94,6 +100,12 @@ dist
 
 # vuepress build output
 .vuepress/dist
+
+# vuepress v2.x temp and cache directory
+.temp
+
+# Docusaurus cache and generated files
+.docusaurus
 
 # Serverless directories
 .serverless/
@@ -117,4 +129,13 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# End of https://mrkandreev.name/snippets/gitignore-generator/#Node
+### Node Patch ###
+# Serverless Webpack directories
+.webpack/
+
+# Optional stylelint cache
+
+# SvelteKit build / generate output
+.svelte-kit
+
+# End of https://www.toptal.com/developers/gitignore/api/node
