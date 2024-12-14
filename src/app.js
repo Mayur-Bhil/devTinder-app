@@ -2,7 +2,7 @@ const express = require("express")
 const connectDB = require("./config/database.js")
 const app = express();
 const port  = 3000;
-const User = require("./models/user.js")
+const User = require("./models/user.js");
 
 app.use(express.json())
 
@@ -55,10 +55,10 @@ app.get("/findone",async(req,res)=>{
 app.delete("/user",async(req,res)=>{
     const userId = req.body.userId;
     try {
-        const user = await User.findByIdAndDelete({_id:userId});
+        const user = await User.findOneAndDelete({_id:userId})
         res.send("User Deleted SuccessFUlly ..!")
     } catch (error) {
-        res.status(400).send("Error Ouccored ..!",error)
+        res.status(402).send({message:"Error Occoured"})
     }
 })
 
