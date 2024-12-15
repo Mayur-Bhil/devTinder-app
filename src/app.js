@@ -8,13 +8,13 @@ app.use(express.json())
 
 app.post("/signup",async (req,res)=>{
     //createing a new Instance OF a model and Sending The DUmmy Data
-    
+
     const user = new User(req.body);
    try{
     await user.save();
     res.send("User Added SuccessFully")
    }catch(err){
-        res.status(400).json("Error User",err)
+        res.status(400).json("Client Side Error ",err)
    }
 })
 
@@ -22,7 +22,7 @@ app.get("/user",async(req,res)=>{
     const userEmail = req.body.emailId;
    try{
    const users = await User.find({emailId: userEmail});
-   if(users.length ==0){
+   if(users.length == 0){
         res.status(404).send("USer not Found ..!")
    }else{
         res.send(users);
@@ -61,9 +61,22 @@ app.delete("/user",async(req,res)=>{
         res.status(402).send({message:"Error Occoured"})
     }
 })
+app.patch("/user",async(req,res)=>{
+const userId = req.body.userId;
+const data = req.body;
+    try {
+        await User.findByIdAndUpdate({_id:userId},data,{
+            returnDocument:"after",
+            runValidators:true,
+        });
+        res.send("User Profile Updated SucessFully");
+    } catch (error) {
+        res.status(402).send("user Error ..!")
+    }
+}) 
 
 connectDB()
-.then(()=>{
+.then(()=>{ 
     console.log("Database Connections Eastablish");
     app.listen(port,()=>{
         console.log(`app is listening On Port ${port}`);
