@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/Mayur-Bhil/devTinder-app#readme",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "express": "^4.21.2",
     "mongoose": "^8.8.4",
     "nodemon": "^3.1.7",

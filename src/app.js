@@ -1,20 +1,33 @@
 const express = require("express");
 const connectDB = require("./config/database.js");
+const brycrpt = require("bcrypt")
 const app = express();
 const port = 3000;
 const User = require("./models/user.js");
+const { validateSignUpData } = require("./utils/validation.js");
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
   //createing a new Instance OF a model and Sending The DUmmy Data
-
-  const user = new User(req.body);
+  // 1)validate the Data
+  // 2)Encrypt the password than save the USer
   try {
+    validateSignUpData(req)
+    const {password,firstName,lastName,emailId}  = req.body;
+    const passwordHash = await brycrpt.hash(password,10)
+    console.log(passwordHash);
+    
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password:passwordHash,
+    });
     await user.save();
     res.send("User Added SuccessFully");
   } catch (err) {
-    res.status(400).json("Client Side Error ", err);
+    res.status(400).send(err.message);
   }
 });
 
@@ -88,7 +101,7 @@ app.patch("/user/:userId", async (req, res) => {
       returnDocument: "after",
       runValidators: true,
     });
-    res.send("User Profile Updated SucessFully");
+    res.send("User 2222222222Profile Updated SucessFully");
   } catch (error) {
     res.status(402).send("user Error ..!");
   }
