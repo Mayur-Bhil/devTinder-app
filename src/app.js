@@ -5,8 +5,12 @@ const app = express();
 const port = 3000;
 const User = require("./models/user.js");
 const { validateSignUpData } = require("./utils/validation.js");
+const cookieParser = require("cookie-parser")
+const jwt = require("jsonwebtoken")
+const secret = "xyz"
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   //createing a new Instance OF a model and Sending The DUmmy Data
@@ -30,6 +34,61 @@ app.post("/signup", async (req, res) => {
     res.status(400).send(err.message);
   }
 });
+
+app.post("/login",async (req,res)=>{
+  try {
+      const {emailId,password} = req.body;
+
+      const user = await User.findOne({emailId : emailId});
+      if(!user){
+        throw new Error("Invalid Credentials..!");
+        
+      }
+      const isPasswordValid = await brycrpt.compare(password,user.password);
+
+      if(isPasswordValid){
+        //create jwt Token
+        const token = await jwt.sign({_id: user._id},secret);
+        console.log(token)
+
+        res.cookie("token",token)
+
+        //add the token to cookie and send the responce back to the user
+
+        res.status(200).send("SuccessFully login")
+      }else{
+        throw new Error("Password is incorrect");
+        
+      }
+  } catch (error) {
+      res.status(400).send(error.message)
+  }
+});
+
+app.get("/profile",async(req,res)=>{
+
+   try {
+    const cookies = req.cookies;
+    const {token}  = cookies;
+    // validate the Token
+    if(!token){
+        throw new Error("Invalid Token ");
+        
+    }
+    const decoded = await jwt.verify(token,secret);
+    const {_id} = decoded;
+   const user = await User.findById(_id);
+   if(!user){
+      throw new Error("User Does Not exist ..!");
+      
+   }
+   res.send(user)
+
+   } catch (error) {
+      res.send("Client Error :"+error)
+   }
+  
+})
 
 app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;
