@@ -8,6 +8,7 @@ const { validateSignUpData } = require("./utils/validation.js");
 const cookieParser = require("cookie-parser")
 const jwt = require("jsonwebtoken")
 const secret = "xyz"
+const {userAuth }  = require("./middlewares/auth.js")
 
 app.use(express.json());
 app.use(cookieParser());
@@ -35,7 +36,7 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.post("/login",async (req,res)=>{
+app.post("/login",userAuth,async (req,res)=>{
   try {
       const {emailId,password} = req.body;
 
@@ -88,6 +89,12 @@ app.get("/profile",async(req,res)=>{
       res.send("Client Error :"+error)
    }
   
+})
+
+app.post("/sendConnectionRequest",userAuth,async(req,res)=>{
+    console.log("Sent COonneection Request")
+    res.send(User.firstName+" "+"Sent COonneection Request")
+
 })
 
 app.get("/user", async (req, res) => {
@@ -176,3 +183,4 @@ connectDB()
   .catch((err) => {
     console.error("Database COnnection Error ...!", err);
   });
+module.exports = {secret}
