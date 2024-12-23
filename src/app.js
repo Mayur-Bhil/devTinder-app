@@ -1,14 +1,14 @@
 const express = require("express");
 const connectDB = require("./config/database.js");
-const brycrpt = require("bcrypt")
+const brycrpt = require("bcrypt");
 const app = express();
 const port = 3000;
 const User = require("./models/user.js");
 const { validateSignUpData } = require("./utils/validation.js");
-const cookieParser = require("cookie-parser")
-const jwt = require("jsonwebtoken")
-const secret = "xyz"
-const {userAuth }  = require("./middlewares/auth.js")
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+const secret = "xyz";
+const { userAuth } = require("./middlewares/auth.js");
 
 app.use(express.json());
 app.use(cookieParser());
@@ -18,16 +18,16 @@ app.post("/signup", async (req, res) => {
   // 1)validate the Data
   // 2)Encrypt the password than save the USer
   try {
-    validateSignUpData(req)
-    const {password,firstName,lastName,emailId}  = req.body;
-    const passwordHash = await brycrpt.hash(password,10)
+    validateSignUpData(req);
+    const { password, firstName, lastName, emailId } = req.body;
+    const passwordHash = await brycrpt.hash(password, 10);
     console.log(passwordHash);
-    
+
     const user = new User({
       firstName,
       lastName,
       emailId,
-      password:passwordHash,
+      password: passwordHash,
     });
     await user.save();
     res.send("User Added SuccessFully");
@@ -36,66 +36,63 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.post("/login",userAuth,async (req,res)=>{
+app.post("/login", userAuth, async (req, res) => {
   try {
-      const {emailId,password} = req.body;
+    const { emailId, password } = req.body;
 
-      const user = await User.findOne({emailId : emailId});
-      if(!user){
-        throw new Error("Invalid Credentials..!");
-        
-      }
-      const isPasswordValid = await brycrpt.compare(password,user.password);
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) {
+      throw new Error("Invalid Credentials..!");
+    }
+    const isPasswordValid = await brycrpt.compare(password, user.password);
 
-      if(isPasswordValid){
-        //create jwt Token
-        const token = await jwt.sign({_id: user._id},secret);
-        console.log(token)
+    if (isPasswordValid) {
+      //create jwt Token
+      const token = await jwt.sign({ _id: user._id }, secret, {
+        expiresIn: "7d",
+      });
+      console.log(token);
 
-        res.cookie("token",token)
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 3600000),
+        httpOnly: true,
+      });
 
-        //add the token to cookie and send the responce back to the user
+      //add the token to cookie and send the responce back to the user
 
-        res.status(200).send("SuccessFully login")
-      }else{
-        throw new Error("Password is incorrect");
-        
-      }
+      res.status(200).send("SuccessFully login");
+    } else {
+      throw new Error("Password is incorrect");
+    }
   } catch (error) {
-      res.status(400).send(error.message)
+    res.status(400).send(error.message);
   }
 });
 
-app.get("/profile",async(req,res)=>{
-
-   try {
+app.get("/profile", async (req, res) => {
+  try {
     const cookies = req.cookies;
-    const {token}  = cookies;
+    const { token } = cookies;
     // validate the Token
-    if(!token){
-        throw new Error("Invalid Token ");
-        
+    if (!token) {
+      throw new Error("Invalid Token ");
     }
-    const decoded = await jwt.verify(token,secret);
-    const {_id} = decoded;
-   const user = await User.findById(_id);
-   if(!user){
+    const decoded = await jwt.verify(token, secret);
+    const { _id } = decoded;
+    const user = await User.findById(_id);
+    if (!user) {
       throw new Error("User Does Not exist ..!");
-      
-   }
-   res.send(user)
+    }
+    res.send(user);
+  } catch (error) {
+    res.send("Client Error :" + error);
+  }
+});
 
-   } catch (error) {
-      res.send("Client Error :"+error)
-   }
-  
-})
-
-app.post("/sendConnectionRequest",userAuth,async(req,res)=>{
-    console.log("Sent COonneection Request")
-    res.send(User.firstName+" "+"Sent COonneection Request")
-
-})
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+  console.log("Sent COonneection Request");
+  res.send(User.firstName + " " + "Sent COonneection Request");
+});
 
 app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;
@@ -159,9 +156,8 @@ app.patch("/user/:userId", async (req, res) => {
     if (!isUpdateAllowed) {
       throw new Error("Updates Not Allowed");
     }
-    if(data?.skills.length > 10){
+    if (data?.skills.length > 10) {
       throw new Error("Skills Can Not grater Than 10");
-
     }
     await User.findByIdAndUpdate({ _id: userId }, data, {
       returnDocument: "after",
@@ -183,4 +179,4 @@ connectDB()
   .catch((err) => {
     console.error("Database COnnection Error ...!", err);
   });
-module.exports = {secret}
+module.exports = { secret };
