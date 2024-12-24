@@ -8,7 +8,7 @@ const { validateSignUpData } = require("./utils/validation.js");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const secret = "xyz";
-const { userAuth } = require("./middlewares/auth.js");
+const {userAuth} = require("./middlewares/auth.js");
 
 app.use(express.json());
 app.use(cookieParser());
@@ -44,13 +44,10 @@ app.post("/login", userAuth, async (req, res) => {
     if (!user) {
       throw new Error("Invalid Credentials..!");
     }
-    const isPasswordValid = await brycrpt.compare(password, user.password);
-
+    const isPasswordValid = await user.validatePassword(password);
     if (isPasswordValid) {
       //create jwt Token
-      const token = await jwt.sign({ _id: user._id }, secret, {
-        expiresIn: "7d",
-      });
+      const token = await user.getJWT();
       console.log(token);
 
       res.cookie("token", token, {

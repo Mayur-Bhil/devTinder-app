@@ -1,5 +1,4 @@
-const jwt = require("jsonwebtoken");
-const secret = require("../app")
+
 const User = require("../models/user");
 const userAuth = async (req, res, next) => {
     try {
@@ -27,4 +26,4 @@ const userAuth = async (req, res, next) => {
     }
 }   
 
-module.esports = userAuth;
+module.exports = {userAuth};
