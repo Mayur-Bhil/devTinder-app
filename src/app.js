@@ -1,95 +1,20 @@
 const express = require("express");
 const connectDB = require("./config/database.js");
-const brycrpt = require("bcrypt");
 const app = express();
 const port = 3000;
-const User = require("./models/user.js");
-const { validateSignUpData } = require("./utils/validation.js");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
 const secret = "xyz";
-const {userAuth} = require("./middlewares/auth.js");
+const User = require("./models/user.js");
+const authRouter = require("./routes/auth.router.js");
+const profileRouter = require("./routes/profile.router.js");
+const requestRouter = require("./routes/request.Router.js");
 
 app.use(express.json());
 app.use(cookieParser());
 
-app.post("/signup", async (req, res) => {
-  //createing a new Instance OF a model and Sending The DUmmy Data
-  // 1)validate the Data
-  // 2)Encrypt the password than save the USer
-  try {
-    validateSignUpData(req);
-    const { password, firstName, lastName, emailId } = req.body;
-    const passwordHash = await brycrpt.hash(password, 10);
-    console.log(passwordHash);
-
-    const user = new User({
-      firstName,
-      lastName,
-      emailId,
-      password: passwordHash,
-    });
-    await user.save();
-    res.send("User Added SuccessFully");
-  } catch (err) {
-    res.status(400).send(err.message);
-  }
-});
-
-app.post("/login", userAuth, async (req, res) => {
-  try {
-    const { emailId, password } = req.body;
-
-    const user = await User.findOne({ emailId: emailId });
-    if (!user) {
-      throw new Error("Invalid Credentials..!");
-    }
-    const isPasswordValid = await user.validatePassword(password);
-    if (isPasswordValid) {
-      //create jwt Token
-      const token = await user.getJWT();
-      console.log(token);
-
-      res.cookie("token", token, {
-        expires: new Date(Date.now() + 8 * 3600000),
-        httpOnly: true,
-      });
-
-      //add the token to cookie and send the responce back to the user
-
-      res.status(200).send("SuccessFully login");
-    } else {
-      throw new Error("Password is incorrect");
-    }
-  } catch (error) {
-    res.status(400).send(error.message);
-  }
-});
-
-app.get("/profile", async (req, res) => {
-  try {
-    const cookies = req.cookies;
-    const { token } = cookies;
-    // validate the Token
-    if (!token) {
-      throw new Error("Invalid Token ");
-    }
-    const decoded = await jwt.verify(token, secret);
-    const { _id } = decoded;
-    const user = await User.findById(_id);
-    if (!user) {
-      throw new Error("User Does Not exist ..!");
-    }
-    res.send(user);
-  } catch (error) {
-    res.send("Client Error :" + error);
-  }
-});
-
-app.post("/sendConnectionRequest", userAuth, async (req, res) => {
-  console.log("Sent COonneection Request");
-  res.send(User.firstName + " " + "Sent COonneection Request");
-});
+app.use("/auth",authRouter);
+app.use("/profile", profileRouter);
+app.use("/request", requestRouter);
 
 app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;
@@ -176,4 +101,5 @@ connectDB()
   .catch((err) => {
     console.error("Database COnnection Error ...!", err);
   });
+  
 module.exports = { secret };
