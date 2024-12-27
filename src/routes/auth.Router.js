@@ -15,10 +15,10 @@ authRouter.post("/signup", async (req, res) => {
     // 1)validate the Data
     // 2)Encrypt the password than save the USer
     try {
-      validateSignUpData(req);
+       validateSignUpData(req);
       const { password, firstName, lastName, emailId } = req.body;
       const passwordHash = await brycrpt.hash(password, 10);
-      console.log(passwordHash);
+      // console.log(passwordHash);
   
       const user = new User({
         firstName,
@@ -48,7 +48,7 @@ authRouter.post("/signup", async (req, res) => {
         console.log(token);
   
         res.cookie("token", token, {
-          expires: new Date(Date.now() + 8 * 3600000),
+          expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
           httpOnly: true,
         });
   
@@ -60,9 +60,18 @@ authRouter.post("/signup", async (req, res) => {
       }
     } catch (error) {
       res.status(400).send(error.message);
+      console.log(error.message);
     }
   });
+
+  authRouter.post("/logout", userAuth, async (req, res) => {
   
+        res.cookie("token", null, {
+          expires: new Date(Date.now()),
+          httpOnly: true,
+        }).send("Logged Out SuccessFully");
+
+  });
 
 
 module.exports = authRouter;

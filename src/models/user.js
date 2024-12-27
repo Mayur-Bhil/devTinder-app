@@ -66,13 +66,6 @@ const userSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.methods.getJWT = async function () {
-  const user = this;
-  const token = await jwt.sign({ _id: user._id }, secret, {
-    expiresIn: "7d",
-  });
-  return token;
-};
 
 userSchema.methods.validatePassword = async function (passwordInputByUser) {
   const user = this;
@@ -82,6 +75,15 @@ userSchema.methods.validatePassword = async function (passwordInputByUser) {
     passwordHash
   );
   return isPasswordValid;
+};
+
+
+userSchema.methods.getJWT = async function () {
+  const user = this;
+  const token = await jwt.sign({ _id: user._id }, secret, {
+    expiresIn: "7d",
+  });
+  return token;
 };
 
 const User = mongoose.model("User", userSchema);
