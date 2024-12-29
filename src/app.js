@@ -3,10 +3,9 @@ const connectDB = require("./config/database.js");
 const app = express();
 const port = 3000;
 const cookieParser = require("cookie-parser");
-const secret = "xyz";
 const User = require("./models/user.js");
-const authRouter = require("./routes/auth.router.js");
-const profileRouter = require("./routes/profile.router.js");
+const authRouter = require("./routes/auth.Router.js");
+const profileRouter = require("./routes/profile.Router.js");
 const requestRouter = require("./routes/request.Router.js");
 
 app.use(express.json());
@@ -99,7 +98,7 @@ connectDB()
     });
   })
   .catch((err) => {
-    console.error("Database COnnection Error ...!", err);
+    console.error("Database Connection Error ...!", err);
   });
   
-module.exports = { secret };
+

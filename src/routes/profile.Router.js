@@ -13,7 +13,7 @@ profileRouter.get("/profile/view", async (req, res) => {
       if (!token) {
         throw new Error("Invalid Token ");
       }
-      const decoded = await jwt.verify(token, secret);
+      const decoded = await jwt.verify(token, process.env.JWT_SECRET_KEY);
       const { _id } = decoded;
       const user = await User.findById(_id);
       if (!user) {
