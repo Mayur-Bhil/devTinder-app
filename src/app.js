@@ -11,9 +11,9 @@ const requestRouter = require("./routes/request.Router.js");
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/auth",authRouter);
-app.use("/profile", profileRouter);
-app.use("/request", requestRouter);
+app.use("/",authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
 
 app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;
@@ -57,6 +57,7 @@ app.delete("/user", async (req, res) => {
     res.status(402).send({ message: "Error Occoured" });
   }
 });
+
 app.patch("/user/:userId", async (req, res) => {
   const userId = req.params?.userId;
   const data = req.body;

@@ -14,7 +14,7 @@ authRouter.use(cookieParser());
 
 
 
-authRouter.post("/signup", async (req, res) => {
+authRouter.post("/auth/signup", async (req, res) => {
     //createing a new Instance OF a model and Sending The DUmmy Data
     // 1)validate the Data
     // 2)Encrypt the password than save the USer
@@ -37,7 +37,7 @@ authRouter.post("/signup", async (req, res) => {
     }
   });
 
-  authRouter.post("/login", userAuth, async (req, res) => {
+  authRouter.post("/auth/login", userAuth, async (req, res) => {
     try {
       const { emailId, password } = req.body;
       console.log(req.body);
@@ -71,7 +71,7 @@ authRouter.post("/signup", async (req, res) => {
     }
   });
 
-  authRouter.post("/logout", userAuth, async (req, res) => {
+  authRouter.post("/auth/logout", userAuth, async (req, res) => {
   
         res.cookie("token", null, {
           expires: new Date(Date.now()),
