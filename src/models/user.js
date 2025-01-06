@@ -10,7 +10,7 @@ const userSchema = mongoose.Schema(
      firstName: {
       type: String,
       required: true,
-      minLength: 8,
+      minLength: 4,
       
     },
     lastName: {
@@ -85,11 +85,11 @@ userSchema.methods.getJWT = async function () {
   return token;
 }; 
 
-userSchema.methods.validatePassword = async function (passwordInputByUser) {
+userSchema.methods.validatePassword = async function (password) {
   const user = this;
   const passwordHash = user.password;
   const isPasswordValid = await bcrypt.compare(
-    passwordInputByUser,
+    password,
     passwordHash
   );
   return isPasswordValid;

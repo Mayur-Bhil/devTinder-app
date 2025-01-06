@@ -7,6 +7,7 @@ const User = require("./models/user.js");
 const authRouter = require("./routes/auth.Router.js");
 const profileRouter = require("./routes/profile.Router.js");
 const requestRouter = require("./routes/request.Router.js");
+const UserRouter = require("./routes/user.Router.js");  
 
 app.use(express.json());
 app.use(cookieParser());
@@ -14,6 +15,8 @@ app.use(cookieParser());
 app.use("/",authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
+app.use("/",UserRouter);
+
 
 app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;

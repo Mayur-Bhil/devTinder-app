@@ -4,8 +4,10 @@ const brycrpt = require('bcrypt');
 const User = require("../models/user.js");
 const {validateSignUpData} = require("../utils/validation.js");
 const {userAuth} = require("../middlewares/auth.js");
-const cookieParser = require("cookie-parser");
-authRouter.use(cookieParser());
+const jwt = require("jsonwebtoken");
+
+
+
 
 
 
@@ -48,22 +50,28 @@ authRouter.post("/auth/signup", async (req, res) => {
         throw new Error("Invalid Credentials..!");
       }
       const isPasswordValid = await user.validatePassword(password);
-      if (!isPasswordValid) {
+      if (isPasswordValid) {
         //create jwt Token
-     
-        throw new Error("Password is incorrect");
-        
-        //add the token to cookie and send the responce back to the user
+        const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET_KEY, {
+          expiresIn: "7d",
+         });
+
+         if(!token){
+           throw new Error("Token Not Created");
+         }
   
-      } else {
-        const token = await user.getJWT();
-        console.log("this is jwt Token"+token);
-        
         res.cookie("token", token, {
           expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
           httpOnly: true,
         });
+
         res.status(200).send("SuccessFully login");
+        //add the token to cookie and send the responce back to the user
+  
+      } else {
+        
+        throw new Error("Password is incorrect");
+        
       }
     } catch (error) {
       res.status(400).send(error.message);
