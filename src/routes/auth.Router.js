@@ -5,18 +5,12 @@ const User = require("../models/user.js");
 const {validateSignUpData} = require("../utils/validation.js");
 const {userAuth} = require("../middlewares/auth.js");
 const jwt = require("jsonwebtoken");
+const secret = "xyz";
 
 
 
 
-
-
-
-
-
-
-
-authRouter.post("/auth/signup", async (req, res) => {
+authRouter.post("/signup", async (req, res) => {
     //createing a new Instance OF a model and Sending The DUmmy Data
     // 1)validate the Data
     // 2)Encrypt the password than save the USer
@@ -39,7 +33,7 @@ authRouter.post("/auth/signup", async (req, res) => {
     }
   });
 
-  authRouter.post("/auth/login", userAuth, async (req, res) => {
+  authRouter.post("/login", userAuth, async (req, res) => {
     try {
       const { emailId, password } = req.body;
       console.log(req.body);
@@ -52,7 +46,7 @@ authRouter.post("/auth/signup", async (req, res) => {
       const isPasswordValid = await user.validatePassword(password);
       if (isPasswordValid) {
         //create jwt Token
-        const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET_KEY, {
+        const token = await jwt.sign({ _id: user._id },secret,{
           expiresIn: "7d",
          });
 

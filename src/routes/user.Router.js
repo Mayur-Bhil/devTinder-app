@@ -51,11 +51,17 @@ UserRouter.get("/user/requests/accepeted", userAuth, async (req, res) => {
 
 UserRouter.get("/Feed",userAuth,async(req,res)=>{
   try {
-    const loggedInUser =req.user;
+    const loggedInUser = req.user;
+
+    const page = parseInt( req.query.page) || 1;
+    const limit =parseInt(req.query.limit )|| 10;
+    limit = limit > 50 ? 50 : limit;
+    const skip = (page-1)*limit;
+
     //find All request Sent and recived
     const ConnectionRequestes = await ConnectionRequest.find({
       $or:[{formUserId:loggedInUser._id},{toUserId:LoggedInuser._id}]
-    }).select("fromUserId toUserId status");
+    }).select("fromUserId toUserId status").skip(skip).limit(limit);
     
     const Blockedusers = new Set();
     ConnectionRequestes.foreEach((request)=>{
@@ -69,7 +75,7 @@ UserRouter.get("/Feed",userAuth,async(req,res)=>{
       {_id:{$ne:loggedInUser._id}},
       ],
     }).select("firstName lastName emailId skills about photoUrl");
-    
+
     res.send("feed",Users);
 
   } catch (error) {

@@ -8,6 +8,7 @@ const authRouter = require("./routes/auth.Router.js");
 const profileRouter = require("./routes/profile.Router.js");
 const requestRouter = require("./routes/request.Router.js");
 const UserRouter = require("./routes/user.Router.js");  
+const secret = "xyz";
 
 app.use(express.json());
 app.use(cookieParser());
@@ -106,3 +107,4 @@ connectDB()
   });
   
 
+module.exports = secret;
