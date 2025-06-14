@@ -61,12 +61,6 @@ const userSchema = mongoose.Schema(
     },
     skills: {
       type: [String],
-      validate: {
-        validator: function(arr) {
-          return arr.length >= 4 && arr.length <= 12;
-        },
-        message: 'Skills must be between 4 and 12 items'
-      }
     },
   },
   { timestamps: true }

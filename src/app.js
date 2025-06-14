@@ -1,24 +1,26 @@
 const express = require("express");
+const mongoose = require("mongoose"); // Added missing import
 const connectDB = require("./config/database.js");
-const app = express();
-const port = 3000;
 const cookieParser = require("cookie-parser");
 const User = require("./models/user.js");
 const authRouter = require("./routes/auth.Router.js");
 const profileRouter = require("./routes/profile.Router.js");
 const requestRouter = require("./routes/request.Router.js");
-const UserRouter = require("./routes/user.Router.js");  
-const secret = "xyz";
+const UserRouter = require("./routes/user.Router.js");
 
+const app = express();
+const port = process.env.PORT || 3000;
+const secret = process.env.SECRET || "your-secret-key"; // Use environment variable
 
-
+// Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-app.use("/",authRouter);
+// Routes
+app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
-app.use("/",UserRouter);
+app.use("/", UserRouter);
 
 // Health check endpoint for Docker
 app.get('/health', async (req, res) => {
@@ -67,92 +69,169 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// User endpoints - these should ideally be moved to a separate router
 app.get("/user", async (req, res) => {
-  const userEmail = req.body.emailId;
   try {
-    const users = await User.find({ emailId: userEmail });
-    if (users.length == 0) {
-      res.status(404).send("USer not Found ..!");
-    } else {
-      res.send(users);
+    // Get email from query params instead of body for GET request
+    const userEmail = req.query.emailId;
+    
+    if (!userEmail) {
+      return res.status(400).json({ error: "Email ID is required" });
     }
+
+    const users = await User.find({ emailId: userEmail });
+    
+    if (users.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    res.json(users);
   } catch (err) {
-    res.status(400).send("Somthing Went Wrong..!");
+    console.error("Error fetching user:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 app.get("/feed", async (req, res) => {
   try {
-    const users = await User.find({});
-    res.send(users);
+    // Consider adding pagination for large datasets
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = parseInt(req.query.skip) || 0;
+    
+    const users = await User.find({})
+      .limit(limit)
+      .skip(skip)
+      .select('-password'); // Exclude sensitive fields
+    
+    res.json(users);
   } catch (err) {
-    res.status(400).send("Somthing Went Wrong..!");
+    console.error("Error fetching feed:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 app.get("/findone", async (req, res) => {
-  const userEmail = req.body.emailId;
   try {
-    const users = await User.findOne({ emailId: userEmail });
-    res.send(users);
+    const userEmail = req.query.emailId; // Use query params for GET
+    
+    if (!userEmail) {
+      return res.status(400).json({ error: "Email ID is required" });
+    }
+
+    const user = await User.findOne({ emailId: userEmail }).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    res.json(user);
   } catch (err) {
-    res.status(404).send("User Not Found ..!");
+    console.error("Error finding user:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 app.delete("/user", async (req, res) => {
-  const userId = req.body.userId;
   try {
-    const user = await User.findOneAndDelete({ _id: userId });
-    res.send("User Deleted SuccessFUlly ..!");
+    const userId = req.body.userId;
+    
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    const user = await User.findByIdAndDelete(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    res.json({ message: "User deleted successfully" });
   } catch (error) {
-    res.status(402).send({ message: "Error Occoured" });
+    console.error("Error deleting user:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
 app.patch("/user/:userId", async (req, res) => {
-  const userId = req.params?.userId;
-  const data = req.body;
-
   try {
+    const userId = req.params.userId;
+    const data = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
     const ALLOWED_UPDATES = [
       "userId",
-      "photoUrl",
+      "photoUrl", 
       "about",
       "gender",
       "age",
       "skills",
     ];
-    const isUpdateAllowed = Object.keys(data).every((k) => {
-      ALLOWED_UPDATES.includes(k);
-    });
+
+    const isUpdateAllowed = Object.keys(data).every(key => 
+      ALLOWED_UPDATES.includes(key)
+    );
 
     if (!isUpdateAllowed) {
-      throw new Error("Updates Not Allowed");
+      return res.status(400).json({ error: "Invalid update fields" });
     }
-    if (data?.skills.length > 10) {
-      throw new Error("Skills Can Not grater Than 10");
+
+    if (data.skills && data.skills.length > 10) {
+      return res.status(400).json({ error: "Skills cannot be more than 10" });
     }
-    await User.findByIdAndUpdate({ _id: userId }, data, {
-      returnDocument: "after",
-      runValidators: true,
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId, 
+      data, 
+      {
+        new: true, // Return updated document
+        runValidators: true,
+      }
+    ).select('-password');
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ 
+      message: "User profile updated successfully",
+      user: updatedUser 
     });
-    res.send("User Profile Updated SucessFully");
   } catch (error) {
-    res.status(402).send("user Error ..!");
+    console.error("Error updating user:", error);
+    
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Start server
 connectDB()
   .then(() => {
-    console.log("Database Connections Eastablish");
+    console.log("Database connection established");
     app.listen(port, '0.0.0.0', () => {
-  console.log(`App listening on port ${port}`);
-  });
+      console.log(`Server listening on port ${port}`);
+    });
   })
   .catch((err) => {
-    console.error("Database Connection Error ...!", err);
+    console.error("Database connection error:", err);
+    process.exit(1);
   });
-  
 
-module.exports = secret;
+module.exports = { app, secret };

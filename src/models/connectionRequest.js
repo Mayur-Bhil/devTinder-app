@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const connectionRequestSchema = new mongoose.Schema(
   {
     fromUserId: {
@@ -10,15 +11,14 @@ const connectionRequestSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "User",
-     
     },
     status: {
       type: String,
-      default: "pending",
+      default: "interested", // Fixed: changed from "pending" to match enum
       required: true,
       enum: {
-       values: ["ignore", "accepted", "rejected", "interested"],
-       message: `{value} incorrect status type`,
+        values: ["ignore", "accepted", "rejected", "interested"],
+        message: `{VALUE} incorrect status type`, // Fixed: {value} to {VALUE}
       },
     },
   },
@@ -27,19 +27,22 @@ const connectionRequestSchema = new mongoose.Schema(
   }
 );
 
-connectionRequestSchema.index({fromUserId:1,toUserId:1},{unique:true});
-connectionRequestSchema.pre("save",async function(next){
+connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 }, { unique: true });
+
+connectionRequestSchema.pre("save", function(next) { // Fixed: removed async (not needed)
   const connectionRequest = this;
-  // const fromUser = await User
-  // /'cheack FromUserID and toUserId same Or Not'
-  if(connectionRequest.fromUserId.equals(connectionRequest.toUserId)){
-    throw new Error("You can not send Connection Request to yourself ..!");
+  
+  // Check if FromUserID and toUserId are the same
+  if (connectionRequest.fromUserId.equals(connectionRequest.toUserId)) {
+    throw new Error("You cannot send Connection Request to yourself!");
   }
   next();
 });
 
-const ConnectionRequest = new mongoose.model(
+// Fixed: removed 'new' keyword
+const ConnectionRequest = mongoose.model(
   "ConnectionRequest",
   connectionRequestSchema
 );
+
 module.exports = ConnectionRequest;

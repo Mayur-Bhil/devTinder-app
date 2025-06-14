@@ -4,83 +4,115 @@ const { userAuth } = require("../middlewares/auth.js");
 const ConnectionRequest = require("../models/connectionRequest.js");
 const User = require("../models/user.js");
 
-UserRouter.get("/user/requests/recevied", userAuth, async (req, res) => {
+// Get received connection requests
+UserRouter.get("/user/requests/received", userAuth, async (req, res) => {
   try {
-    const LoggedInuser = req.user;
-    const ConnectionRequestes = await ConnectionRequest.find({
-      toUserId: LoggedInuser._id,
+    const loggedInUser = req.user;
+    const connectionRequests = await ConnectionRequest.find({
+      toUserId: loggedInUser._id,
       status: "interested",
     })
-      .populate("fromUserId", ["firstName", "lastName"])
+      .populate("fromUserId", ["firstName", "lastName", "photoUrl", "about"])
       .populate("toUserId", ["firstName", "lastName"]);
     
     res.json({
-      message: "Connection Requests",
-      data: ConnectionRequestes,
+      message: "Received Connection Requests",
+      data: connectionRequests,
     });
   } catch (error) {
-    res.send("Somthing Went Wrong..!", error.message);
+    res.status(500).json({
+      message: "Something went wrong!",
+      error: error.message
+    });
   }
 });
 
-UserRouter.get("/user/requests/accepeted", userAuth, async (req, res) => {
+// Get accepted connections (your connections)
+UserRouter.get("/user/connections", userAuth, async (req, res) => {
   try {
-    const LoggedInuser = req.user;
-    const ConnectionRequestes = await ConnectionRequest.find({
+    const loggedInUser = req.user;
+    const connectionRequests = await ConnectionRequest.find({
       $or: [
-        { toUserId: LoggedInuser, status: "accepted" },
-        { formUserId: LoggedInuser, status: "accepted" },
+        { toUserId: loggedInUser._id, status: "accepted" },
+        { fromUserId: loggedInUser._id, status: "accepted" },
       ],
-    }).populate("fromUserId", ["firstName", "lastName"]);
+    })
+      .populate("fromUserId", ["firstName", "lastName", "photoUrl", "about", "skills"])
+      .populate("toUserId", ["firstName", "lastName", "photoUrl", "about", "skills"]);
 
-    const Data = ConnectionRequestes.map((request) => {
-           if(request.formUserId._id.toString() === LoggedInuser._id.toString()){                                                                                                                                                                                                                                   
-                 return request.toUserId;
-           }
-           return request.formUserId;
+    // Extract the connected users (not the logged-in user)
+    const connections = connectionRequests.map((request) => {
+      if (request.fromUserId._id.toString() === loggedInUser._id.toString()) {
+        return request.toUserId;
+      }
+      return request.fromUserId;
     });
 
     res.json({
-      message: "Connection Requests",
-      Data,
+      message: "Your Connections",
+      data: connections,
     });
   } catch (error) {
-    res.send("Somthing Went Wrong..!", error.message);
+    res.status(500).json({
+      message: "Something went wrong!",
+      error: error.message
+    });
   }
 });
 
-UserRouter.get("/Feed",userAuth,async(req,res)=>{
+// Get feed (users you can connect with)
+UserRouter.get("/user/feed", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
 
-    const page = parseInt( req.query.page) || 1;
-    const limit =parseInt(req.query.limit )|| 10;
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
     limit = limit > 50 ? 50 : limit;
-    const skip = (page-1)*limit;
+    const skip = (page - 1) * limit;
 
-    //find All request Sent and recived
-    const ConnectionRequestes = await ConnectionRequest.find({
-      $or:[{formUserId:loggedInUser._id},{toUserId:LoggedInuser._id}]
-    }).select("fromUserId toUserId status").skip(skip).limit(limit);
+    // Find all connection requests (sent and received)
+    const connectionRequests = await ConnectionRequest.find({
+      $or: [
+        { fromUserId: loggedInUser._id },
+        { toUserId: loggedInUser._id }
+      ]
+    }).select("fromUserId toUserId");
     
-    const Blockedusers = new Set();
-    ConnectionRequestes.foreEach((request)=>{
-      Blockedusers.add(request.fromUserId);
-      Blockedusers.add(request.toUserId);
-
+    // Create set of blocked users (users you already have connection requests with)
+    const blockedUsers = new Set();
+    connectionRequests.forEach((request) => {
+      blockedUsers.add(request.fromUserId.toString());
+      blockedUsers.add(request.toUserId.toString());
     });
-    const Users = await User.find({
-    $and:[
-      {_id:{$nin:Array.from(Blockedusers)}}, 
-      {_id:{$ne:loggedInUser._id}},
-      ],
-    }).select("firstName lastName emailId skills about photoUrl");
 
-    res.send("feed",Users);
+    // Find users not in blocked list and not the logged-in user
+    const users = await User.find({
+      $and: [
+        { _id: { $nin: Array.from(blockedUsers) } }, 
+        { _id: { $ne: loggedInUser._id } },
+      ],
+    })
+      .select("firstName lastName photoUrl skills about age")
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      message: "User Feed",
+      data: users,
+      pagination: {
+        currentPage: page,
+        limit: limit,
+        totalUsers: users.length
+      }
+    });
 
   } catch (error) {
-      res.status(400).send("Somthing Went Wrong..!", error.message);
+    res.status(500).json({
+      message: "Something went wrong!",
+      error: error.message
+    });
   }
-})
+});
 
 module.exports = UserRouter;

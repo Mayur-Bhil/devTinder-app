@@ -32,8 +32,11 @@ authRouter.post("/signup", async (req, res) => {
     // Create new user
     const user = new User({
       firstName,
-      lastName,
+      lastName, 
       emailId,
+      age,
+      gender,
+      skills,
       password: passwordHash,
     });
     
