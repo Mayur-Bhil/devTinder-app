@@ -10,6 +10,8 @@ const requestRouter = require("./routes/request.Router.js");
 const UserRouter = require("./routes/user.Router.js");  
 const secret = "xyz";
 
+
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -18,6 +20,52 @@ app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/",UserRouter);
 
+// Health check endpoint for Docker
+app.get('/health', async (req, res) => {
+  try {
+    // Check MongoDB connection
+    const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    
+    const healthCheck = {
+      status: 'OK',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      service: 'Dating App API',
+      version: process.env.npm_package_version || '1.0.0',
+      database: {
+        status: mongoStatus,
+        name: mongoose.connection.name || 'dating-app'
+      },
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
+      }
+    };
+
+    res.status(200).json(healthCheck);
+  } catch (error) {
+    res.status(503).json({
+      status: 'ERROR',
+      message: 'Service unavailable',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// API status endpoint
+app.get('/api/status', (req, res) => {
+  res.json({
+    message: 'Dating App API is running!',
+    version: '1.0.0',
+    endpoints: {
+      auth: '/api/auth/*',
+      users: '/api/users/*',
+      matches: '/api/matches/*',
+      conversations: '/api/conversations/*'
+    }
+  });
+});
 
 app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;
@@ -89,7 +137,7 @@ app.patch("/user/:userId", async (req, res) => {
       returnDocument: "after",
       runValidators: true,
     });
-    res.send("User 2222222222Profile Updated SucessFully");
+    res.send("User Profile Updated SucessFully");
   } catch (error) {
     res.status(402).send("user Error ..!");
   }
@@ -98,9 +146,9 @@ app.patch("/user/:userId", async (req, res) => {
 connectDB()
   .then(() => {
     console.log("Database Connections Eastablish");
-    app.listen(port, () => {
-      console.log(`app is listening On Port ${port}`);
-    });
+    app.listen(port, '0.0.0.0', () => {
+  console.log(`App listening on port ${port}`);
+  });
   })
   .catch((err) => {
     console.error("Database Connection Error ...!", err);

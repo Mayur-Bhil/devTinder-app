@@ -21,7 +21,7 @@ profileRouter.get("/profile/view", async (req, res) => {
       }
       res.send(user);
     } catch (error) {
-      res.send("Client Error :" + error);
+      res.status(400).send("Error: " + error.message);
     }
   });
  

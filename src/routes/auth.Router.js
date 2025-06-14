@@ -1,86 +1,146 @@
 const express = require('express');
 const authRouter = express.Router();
-const brycrpt = require('bcrypt');
+const bcrypt = require('bcrypt'); // Fixed typo: brycrpt -> bcrypt
 const User = require("../models/user.js");
-const {validateSignUpData} = require("../utils/validation.js");
-const {userAuth} = require("../middlewares/auth.js");
+const { validateSignUpData } = require("../utils/validation.js");
+const { userAuth } = require("../middlewares/auth.js");
 const jwt = require("jsonwebtoken");
-const secret = "xyz";
 
+// Use environment variable for secret
+const secret = process.env.JWT_SECRET || "your-super-secret-key-change-this-in-production";
 
-
-
+// SIGNUP Route
 authRouter.post("/signup", async (req, res) => {
-    //createing a new Instance OF a model and Sending The DUmmy Data
-    // 1)validate the Data
-    // 2)Encrypt the password than save the USer
-    try {
-       validateSignUpData(req);
-      const { password, firstName, lastName, emailId } = req.body;
-      const passwordHash = await brycrpt.hash(password, 10);
-      console.log(passwordHash);
-  
-      const user = new User({
-        firstName,
-        lastName,
-        emailId,
-        password: passwordHash,
+  try {
+    // 1) Validate the data
+    validateSignUpData(req);
+    
+    const { password, firstName, lastName, emailId } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ emailId });
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "User already exists with this email" 
       });
-      await user.save();
-      res.send("User Added SuccessFully");
-    } catch (err) {
-      res.status(400).send(err.message);
     }
-  });
+    
+    // 2) Encrypt the password
+    const passwordHash = await bcrypt.hash(password, 10);
+    
+    // Create new user
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
+    
+    await user.save();
+    
+    res.status(201).json({ 
+      success: true, 
+      message: "User registered successfully" 
+    });
+    
+  } catch (err) {
+    console.error("Signup error:", err);
+    res.status(400).json({ 
+      success: false, 
+      message: err.message || "Registration failed" 
+    });
+  }
+});
 
-  authRouter.post("/login", userAuth, async (req, res) => {
-    try {
-      const { emailId, password } = req.body;
-      console.log(req.body);
-      
-  
-      const user = await User.findOne({ emailId: emailId });
-      if (!user) {
-        throw new Error("Invalid Credentials..!");
-      }
-      const isPasswordValid = await user.validatePassword(password);
-      if (isPasswordValid) {
-        //create jwt Token
-        const token = await jwt.sign({ _id: user._id },secret,{
-          expiresIn: "7d",
-         });
-
-         if(!token){
-           throw new Error("Token Not Created");
-         }
-  
-        res.cookie("token", token, {
-          expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-          httpOnly: true,
-        });
-
-        res.status(200).send("SuccessFully login");
-        //add the token to cookie and send the responce back to the user
-  
-      } else {
-        
-        throw new Error("Password is incorrect");
-        
-      }
-    } catch (error) {
-      res.status(400).send(error.message);
-      console.log(error.message);
+// LOGIN Route - Remove userAuth middleware (not needed for login)
+authRouter.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    
+    // Validate input
+    if (!emailId || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email and password are required" 
+      });
     }
-  });
+    
+    // Find user by email
+    const user = await User.findOne({ emailId });
+    if (!user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Invalid credentials" 
+      });
+    }
+    
+    // Validate password
+    const isPasswordValid = await user.validatePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Invalid credentials" 
+      });
+    }
+    
+    // Create JWT token
+    const token = jwt.sign(
+      { _id: user._id, emailId: user.emailId }, 
+      secret, 
+      { expiresIn: "7d" }
+    );
+    
+    // Set cookie
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Only use secure in production
+      sameSite: 'lax'
+    });
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Login successful",
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        emailId: user.emailId
+      }
+    });
+    
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
+  }
+});
 
-  authRouter.post("/auth/logout", userAuth, async (req, res) => {
-  
-        res.cookie("token", null, {
-          expires: new Date(Date.now()),
-          httpOnly: true,
-        }).send("Logged Out SuccessFully");
-
-  });
-
+// LOGOUT Route
+authRouter.post("/logout", userAuth, async (req, res) => {
+  try {
+    res.cookie("token", "", {
+      expires: new Date(0), // Set to past date
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    });
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Logged out successfully" 
+    });
+    
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Logout failed" 
+    });
+  }
+});
 
 module.exports = authRouter;

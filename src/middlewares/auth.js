@@ -1,31 +1,53 @@
-
 const User = require("../models/user.js");
 const jwt = require("jsonwebtoken");
-const secret = "xyz";
-
 
 const userAuth = async (req, res, next) => {
     try {
-         const {token} =  req.cookies;
-         
+        // Get token from cookies
+        const { token } = req.cookies;
         
-         if(!token){
-            throw new Error("Invalid Token..!");
-            
-         }
-
-        const decoded = await jwt.verify(token,secret);
-        const {_id} = decoded;
-        const user = await User.findbyId(_id);
-        if(!user){
-            throw new Error("User Does Not Exist");
+        if (!token) {
+            return res.status(401).json({
+                message: "Access denied. No token provided."
+            });
         }
+
+        // Verify token with environment variable secret
+        const decoded = await jwt.verify(token, process.env.JWT_SECRET_KEY);
+        const { _id } = decoded;
+        
+        // Fixed: findbyId → findById
+        const user = await User.findById(_id);
+        if (!user) {
+            return res.status(401).json({
+                message: "User does not exist"
+            });
+        }
+
+        // Attach user to request object
         req.user = user;
         next();
 
     } catch (error) {
-            res.status(400).send("bad Request"+error.message);
-    }
-}   
+        // Handle different types of JWT errors
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({
+                message: "Invalid token"
+            });
+        }
+        
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({
+                message: "Token expired"
+            });
+        }
 
-module.exports = {userAuth}; 
+        // Generic error handling
+        res.status(500).json({
+            message: "Authentication failed",
+            error: error.message
+        });
+    }
+};
+
+module.exports = { userAuth };
