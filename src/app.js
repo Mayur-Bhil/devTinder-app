@@ -1,5 +1,6 @@
   const express = require("express");
-  const mongoose = require("mongoose"); // Added missing import
+  const cors = require("cors")
+  const mongoose = require("mongoose");
   const connectDB = require("./config/database.js");
   const cookieParser = require("cookie-parser");
   const User = require("./models/user.js");
@@ -8,11 +9,15 @@
   const requestRouter = require("./routes/request.Router.js");
   const UserRouter = require("./routes/user.Router.js");
 
+
   const app = express();
   const port = process.env.PORT || 3000;
-  const secret = process.env.SECRET || "your-secret-key"; // Use environment variable
-
-  // Middleware
+  const secret = process.env.SECRET || "your-secret-key"; 
+ 
+  app.use(cors({
+    origin:"http://localhost:5173 ",
+    credentials:true
+  }));
   app.use(express.json());
   app.use(cookieParser());
 
@@ -22,10 +27,10 @@
   app.use("/", requestRouter);
   app.use("/", UserRouter);
 
-  // User endpoints - these should ideally be moved to a separate router
+ 
   app.get("/user", async (req, res) => {
     try {
-      // Get email from query params instead of body for GET request
+     
       const userEmail = req.query.emailId;
       
       if (!userEmail) {
@@ -47,14 +52,14 @@
 
   app.get("/feed", async (req, res) => {
     try {
-      // Consider adding pagination for large datasets
+     
       const limit = parseInt(req.query.limit) || 10;
       const skip = parseInt(req.query.skip) || 0;
       
       const users = await User.find({})
         .limit(limit)
         .skip(skip)
-        .select('-password'); // Exclude sensitive fields
+        .select('-password'); 
       
       res.json(users);
     } catch (err) {
