@@ -20,7 +20,7 @@ const validateSignUpData = (req) => {
     }
 }
 const validateProfileEditData = (req) => {
-    const isUpdateAllowed = ["emailId","firstName","lastName","skills","photoUrl","gender","about"];
+    const isUpdateAllowed = ["emailId","firstName","lastName","skills","photoUrl","gender","about","age"];
     Object.keys(req).every((fields) => {
         isUpdateAllowed.includes(fields);
     });

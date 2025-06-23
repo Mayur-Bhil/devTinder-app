@@ -10,12 +10,59 @@ const jwt = require("jsonwebtoken");
 const secret = process.env.JWT_SECRET || "your-super-secret-key-change-this-in-production";
 
 // SIGNUP Route
+// authRouter.post("/signup", async (req, res) => {
+//   try {
+//     // 1) Validate the data
+//     validateSignUpData(req);
+    
+//     const { password, firstName, lastName, emailId,age,gender,skills } = req.body;
+    
+//     // Check if user already exists
+//     const existingUser = await User.findOne({ emailId });
+//     if (existingUser) {
+//       return res.status(400).json({ 
+//         success: false, 
+//         message: "User already exists with this email" 
+//       });
+//     }
+    
+//     // 2) Encrypt the password
+//     const passwordHash = await bcrypt.hash(password, 10);
+    
+//     // Create new user
+//     const user = new User({
+//       firstName,
+//       lastName, 
+//       emailId,
+//       age,
+//       gender,
+//       skills,
+//       password: passwordHash,
+//     });
+    
+//     await user.save();
+    
+//     res.status(201).json({ 
+//       success: true, 
+//       message: "User registered successfully" 
+//     });
+    
+//   } catch (err) {
+//     console.error("Signup error:", err);
+//     res.status(400).json({ 
+//       success: false, 
+//       message: err.message || "Registration failed" 
+//     });
+//   }
+// });
+
+// SIGNUP Route - FIXED VERSION
 authRouter.post("/signup", async (req, res) => {
   try {
     // 1) Validate the data
     validateSignUpData(req);
     
-    const { password, firstName, lastName, emailId } = req.body;
+    const { password, firstName, lastName, emailId, age, gender, skills } = req.body;
     
     // Check if user already exists
     const existingUser = await User.findOne({ emailId });
@@ -26,10 +73,7 @@ authRouter.post("/signup", async (req, res) => {
       });
     }
     
-    // 2) Encrypt the password
-    const passwordHash = await bcrypt.hash(password, 10);
-    
-    // Create new user
+    // Create new user - DON'T hash password here, let the pre-save middleware handle it
     const user = new User({
       firstName,
       lastName, 
@@ -37,10 +81,10 @@ authRouter.post("/signup", async (req, res) => {
       age,
       gender,
       skills,
-      password: passwordHash,
+      password, // Pass plain password, pre-save middleware will hash it
     });
     
-    await user.save();
+    await user.save(); // Pre-save middleware will hash the password
     
     res.status(201).json({ 
       success: true, 
@@ -70,7 +114,7 @@ authRouter.post("/login", async (req, res) => {
     }
     
     // Find user by email
-    const user = await User.findOne({ emailId });
+    const user = await User.findOne({ emailId:emailId });
     if (!user) {
       return res.status(401).json({ 
         success: false, 

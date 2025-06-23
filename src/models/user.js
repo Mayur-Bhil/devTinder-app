@@ -95,7 +95,7 @@ userSchema.pre('save', async function (next) {
   
   try {
     // Hash password with cost of 12
-    const hashedPassword = await bcrypt.hash(user.password, 12);
+    const hashedPassword = await bcrypt.hash(user.password, 10);
     user.password = hashedPassword;
     next();
   } catch (error) {
