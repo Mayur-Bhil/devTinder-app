@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { BASE_URL} from "../utils/constants"
 
 const Login = () => {
-  const [emailId,setEmail] = useState("rekha@gmail.com");
-  const [password,setpassword] = useState("Lpd@2854455");
+  const [emailId,setEmail] = useState("");
+  const [password,setpassword] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -33,22 +33,22 @@ const Login = () => {
   return (
   <div className='flex justify-center py-[15vw]'>
 
-  <div className="card p-4 card-border bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl shadow-2xl   backdrop-blur-full  w-96">
+  <div className="card p-4 card-border backdrop-blur-[5px] border-2 border-white/20 rounded-xl shadow-2xl  w-96">
   <div className="card-body">
     <h2 className="card-title justify-center">Login</h2>
     <div>
   <fieldset className="fieldset">
-    <legend className="fieldset-legend font-medium">What is your Email?</legend>
+    <label className="fieldset-legend font-medium" htmlFor='email'>Email</label>
     <input onChange={(e)=>{
         setEmail(e.target.value)
     }} 
-     value={emailId} type="text" className="email p-2 text-sm" placeholder="test@gmail.com" />
-    <legend className="fieldset-legend font-medium">What is your password?</legend>
+     value={emailId} type="text" name="email" id='email' className="email text-black p-2 text-sm outline-blue-600 bg-zinc-300 rounded-sm" placeholder="" />
+    <label className="fieldset-legend font-medium" htmlFor="password">password</label>
     <input 
     onChange={(e)=>{
         setpassword(e.target.value)
     }}
-    value={password} type="text" className="password p-2 text-sm" placeholder="#131132" />
+    value={password} type="text" name="password" id='password' className="password p-2 text-black text-sm bg-lime-0 bg-zinc-300 outline-blue-600 border-blue-600 rounded-sm" placeholder="" />
     
 </fieldset>
     </div>
