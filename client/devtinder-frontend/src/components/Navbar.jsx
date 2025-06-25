@@ -38,7 +38,7 @@ const Navbar = () => {
           </a>
         </li>
         <li><a>Settings</a></li>
-        <li><a>Logout</a></li>
+        <li className="cursor-pointer"><a>Logout</a></li>
       </ul>
     </div> )}
   </div>
