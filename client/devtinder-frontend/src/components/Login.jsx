@@ -8,6 +8,7 @@ import { BASE_URL} from "../utils/constants"
 const Login = () => {
   const [emailId,setEmail] = useState("");
   const [password,setpassword] = useState("");
+  const [error,setError] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -25,15 +26,16 @@ const Login = () => {
         
     } catch (error) {
         console.error(error);
+        setError(error?.message?.response?.data?.message || "SOmthing went wrong")
         
-    }
+    }s
 
   }
 
   return (
   <div className='flex justify-center py-[15vw]'>
 
-  <div className="card p-4 card-border backdrop-blur-[5px] border-2 border-white/20 rounded-xl shadow-2xl  w-96">
+  <div className="card p-4 card-border bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-xl shadow-2xl  w-96">
   <div className="card-body">
     <h2 className="card-title justify-center">Login</h2>
     <div>
@@ -52,8 +54,9 @@ const Login = () => {
     
 </fieldset>
     </div>
+      <h6 className='text-red-500'>{error}</h6>
     <div className="card-actions justify-center">
-      <button className="btn btn-primary" onClick={handelLogin}>login</button>
+      <button className="btn btn-primary rounded-xl" onClick={handelLogin}>Login</button>
     </div>
   </div>
 </div>

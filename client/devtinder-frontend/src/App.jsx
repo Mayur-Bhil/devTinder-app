@@ -12,7 +12,7 @@ function App() {
   const [count, setCount] = useState(0)
 
   return (
-    <>
+    <div className=''>
     <Provider store={appStore}>
       
     <BrowserRouter basename='/'>
@@ -25,7 +25,7 @@ function App() {
         </Routes>
     </BrowserRouter>
     </Provider>
-    </>
+    </div>
   )
 }
 

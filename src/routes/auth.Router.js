@@ -171,7 +171,7 @@ authRouter.post("/login", async (req, res) => {
 // LOGOUT Route
 authRouter.post("/logout", userAuth, async (req, res) => {
   try {
-    res.cookie("token", "", {
+    res.cookie("token", null ,{
       expires: new Date(0), // Set to past date
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
