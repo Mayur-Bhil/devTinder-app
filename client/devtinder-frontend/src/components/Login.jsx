@@ -26,7 +26,7 @@ const Login = () => {
         
     } catch (error) {
         console.error(error);
-        setError(error?.message?.response?.data?.message || "SOmthing went wrong")
+        setError(error?.response?.data?.message || "Somthing went wrong")
         
     }s
 
