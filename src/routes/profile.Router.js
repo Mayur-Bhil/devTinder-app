@@ -27,22 +27,40 @@ profileRouter.get("/profile/view", async (req, res) => {
  
   profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     try {
-         if(!validateProfileEditData(req)){
-          throw new Error("Invalid Edit Request");
-          
-         }
-         const loggedInUser = req.user;
-         console.log(loggedInUser);
-         Object.keys(req.body).forEach((key)=>{
-          loggedInUser[key] = req.body[key];
-         })
+        console.log("Request Body:", req.body); // Debug log
+        
+        if(!validateProfileEditData(req)){
+            return res.status(400).json({ 
+                success: false, 
+                message: "Invalid Edit Request - Please check your input data" 
+            });
+        }
+        
+        const loggedInUser = req.user;
+        console.log(loggedInUser);
+        
+        
+        // Only update provided fields
+        Object.keys(req.body).forEach((key) => {
+            if (req.body[key] !== undefined && req.body[key] !== '') {
+                loggedInUser[key] = req.body[key];
+            }
+        });
 
         await loggedInUser.save();
-         res.send(`${loggedInUser.firstName} Your Profile was Updated Successfully`);
-      }
-      catch (error) {
-        res.send("Client Error :" + error);
-      }
-      
-  });
+        
+        res.json({ 
+            success: true, 
+            message: `${loggedInUser.firstName} Your Profile was Updated Successfully`,
+            user: loggedInUser 
+        });
+        
+    } catch (error) {
+        console.error("Profile update error:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Server error: " + error.message 
+        });
+    }
+});
 module.exports = profileRouter;  

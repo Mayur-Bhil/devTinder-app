@@ -30,7 +30,7 @@ useEffect(()=>{
   getFeed();
 },[])
   return feed && (
-    <div>
+    <div className=''>
         <UserCard user={feed[6]}/>
     </div>
   )

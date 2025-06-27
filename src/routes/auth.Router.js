@@ -62,7 +62,7 @@ authRouter.post("/signup", async (req, res) => {
     // 1) Validate the data
     validateSignUpData(req);
     
-    const { password, firstName, lastName, emailId, age, gender, skills,photoUrl } = req.body;
+    const { password, firstName, lastName, emailId,about, age, gender, skills,photoUrl } = req.body;
     
     // Check if user already exists
     const existingUser = await User.findOne({ emailId });
@@ -82,7 +82,8 @@ authRouter.post("/signup", async (req, res) => {
       gender,
       skills,
       password,
-      photoUrl // Pass plain password, pre-save middleware will hash it
+      photoUrl,
+      about // Pass plain password, pre-save middleware will hash it
     });
     
     await user.save(); // Pre-save middleware will hash the password

@@ -20,13 +20,19 @@ const validateSignUpData = (req) => {
     }
 }
 const validateProfileEditData = (req) => {
-    const isUpdateAllowed = ["emailId","firstName","lastName","skills","photoUrl","gender","about","age"];
-    Object.keys(req).every((fields) => {
-        isUpdateAllowed.includes(fields);
-    });
+    const isUpdateAllowed = ["firstName", "lastName", "skills", "photoUrl", "gender", "about", "age"];
+    
+    const requestFields = Object.keys(req.body);
 
+    const allFieldsValid = requestFields.every((field) => isUpdateAllowed.includes(field));
 
-}
+    if (!allFieldsValid) {
+        console.warn("Invalid fields found:", requestFields.filter(f => !isUpdateAllowed.includes(f)));
+    }
+
+    return allFieldsValid;
+};
+
 module.exports = {
     validateSignUpData,
     validateProfileEditData
